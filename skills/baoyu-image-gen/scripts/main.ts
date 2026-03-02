@@ -339,6 +339,8 @@ function detectProvider(args: CliArgs): Provider {
   const hasOpenai = !!process.env.OPENAI_API_KEY;
   const hasDashscope = !!process.env.DASHSCOPE_API_KEY;
   const hasReplicate = !!process.env.REPLICATE_API_TOKEN;
+  // 检测 xheai 中转站
+  const isXheai = process.env.OPENAI_BASE_URL?.includes("xheai.cc");
 
   if (args.referenceImages.length > 0) {
     if (hasGoogle) return "google";
@@ -349,6 +351,8 @@ function detectProvider(args: CliArgs): Provider {
     );
   }
 
+  // 优先检测 xheai 中转站
+  if (isXheai && hasOpenai) return "xheai";
   const available = [hasGoogle && "google", hasOpenai && "openai", hasDashscope && "dashscope", hasReplicate && "replicate"].filter(Boolean) as Provider[];
 
   if (available.length === 1) return available[0]!;
@@ -397,6 +401,9 @@ async function loadProviderModule(provider: Provider): Promise<ProviderModule> {
   }
   if (provider === "replicate") {
     return (await import("./providers/replicate")) as ProviderModule;
+  }
+  if (provider === "xheai") {
+    return (await import("./providers/xheai")) as ProviderModule;
   }
   return (await import("./providers/openai")) as ProviderModule;
 }

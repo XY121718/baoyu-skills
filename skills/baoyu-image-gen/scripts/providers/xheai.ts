@@ -22,7 +22,7 @@ export async function generateImage(
   model: string,
   args: CliArgs
 ): Promise<Uint8Array> {
-  const baseURL = process.env.OPENAI_BASE_URL || "https://api.xheai.cc";
+  const baseURL = (process.env.OPENAI_BASE_URL || "https://api.xheai.cc").replace(/\/v1$/, "");
   const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) throw new Error("OPENAI_API_KEY is required");
