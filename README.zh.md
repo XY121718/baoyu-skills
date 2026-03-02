@@ -14,7 +14,7 @@
 ### 快速安装（推荐）
 
 ```bash
-npx skills add jimliu/baoyu-skills
+npx skills add XY121718/baoyu-skills
 ```
 
 ### 注册插件市场
@@ -22,7 +22,7 @@ npx skills add jimliu/baoyu-skills
 在 Claude Code 中运行：
 
 ```bash
-/plugin marketplace add jimliu/baoyu-skills
+/plugin marketplace add XY121718/baoyu-skills
 ```
 
 ### 安装技能
