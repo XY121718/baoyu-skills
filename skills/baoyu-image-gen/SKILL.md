@@ -43,6 +43,10 @@ Schema: `references/config/preferences-schema.md`
 ## Usage
 
 ```bash
+# ⚠️ 长prompt用 --promptfiles 或双引号包裹，避免换行解析错误
+# 推荐: npx -y bun "${SKILL_DIR}/scripts/main.ts" -p "长prompt" --image out.png
+# 或:   npx -y bun ${SKILL_DIR}/scripts/main.ts --promptfiles prompt.txt --image out.png
+
 # Basic
 npx -y bun ${SKILL_DIR}/scripts/main.ts --prompt "A cat" --image cat.png
 

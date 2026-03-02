@@ -8,33 +8,25 @@ Claude Code marketplace plugin providing AI-powered content generation skills. S
 
 ## Architecture
 
-Skills are organized into three plugin categories in `marketplace.json`:
+Skills are organized into one plugin category in `marketplace.json`:
 
 ```
 skills/
-├── [content-skills]           # Content generation and publishing
-│   ├── baoyu-xhs-images/          # Xiaohongshu infographic series (1-10 images)
-│   ├── baoyu-cover-image/         # Article cover images (2.35:1 aspect)
-│   ├── baoyu-slide-deck/          # Presentation slides with outlines
-│   ├── baoyu-article-illustrator/ # Smart illustration placement
-│   ├── baoyu-comic/               # Knowledge comics (Logicomix/Ohmsha style)
-│   ├── baoyu-post-to-x/           # X/Twitter posting automation
-│   └── baoyu-post-to-wechat/      # WeChat Official Account posting
-│
-├── [ai-generation-skills]     # AI-powered generation backends
-│   └── baoyu-danger-gemini-web/   # Gemini API wrapper (text + image gen)
-│
-└── [utility-skills]           # Utility tools for content processing
-    ├── baoyu-danger-x-to-markdown/ # X/Twitter content to markdown
-    └── baoyu-compress-image/      # Image compression
+└── [image-generation-skills]  # AI image generation
+    ├── baoyu-image-gen/            # Core image generation (OpenAI/Google/DashScope/Replicate)
+    ├── baoyu-xhs-images/          # Xiaohongshu infographic series (1-10 images)
+    ├── baoyu-cover-image/         # Article cover images (2.35:1 aspect)
+    ├── baoyu-infographic/         # Professional infographics (21 layouts, 20 styles)
+    ├── baoyu-slide-deck/          # Presentation slides (8-30 slides)
+    ├── baoyu-comic/               # Knowledge comics (multi-page)
+    ├── baoyu-article-illustrator/ # Article illustrations
+    └── baoyu-danger-gemini-web/   # Backup image generation (reverse API)
 ```
 
 **Plugin Categories**:
 | Category | Description |
 |----------|-------------|
-| `content-skills` | Skills that generate or publish content (images, slides, comics, posts) |
-| `ai-generation-skills` | Backend skills providing AI generation capabilities |
-| `utility-skills` | Helper tools for content processing (conversion, compression) |
+| `image-generation-skills` | AI image generation skills for various content types |
 
 Each skill contains:
 - `SKILL.md` - YAML front matter (name, description) + documentation
@@ -64,15 +56,8 @@ npx -y bun skills/baoyu-danger-gemini-web/scripts/main.ts --promptfiles system.m
 ## Key Dependencies
 
 - **Bun**: TypeScript runtime (via `npx -y bun`)
-- **Chrome**: Required for `baoyu-danger-gemini-web` auth and `baoyu-post-to-x` automation
+- **API Keys**: OpenAI / Google / DashScope / Replicate (configured via `.env`)
 - **No npm packages**: Self-contained TypeScript, no external dependencies
-
-## Authentication
-
-`baoyu-danger-gemini-web` uses browser cookies for Google auth:
-- First run opens Chrome for login
-- Cookies cached in data directory
-- Force refresh: `--login` flag
 
 ## Plugin Configuration
 
@@ -128,9 +113,7 @@ npx -y bun skills/baoyu-danger-gemini-web/scripts/main.ts --promptfiles system.m
 2. Add TypeScript in `skills/baoyu-<name>/scripts/`
 3. Add prompt templates in `skills/baoyu-<name>/prompts/` if needed
 4. **Choose the appropriate category** and register in `marketplace.json`:
-   - `content-skills`: For content generation/publishing (images, slides, posts)
-   - `ai-generation-skills`: For AI backend capabilities
-   - `utility-skills`: For helper tools (conversion, compression)
+   - `image-generation-skills`: For AI image generation skills
    - If none fit, create a new category with descriptive name
 5. **Add Script Directory section** to SKILL.md (see template below)
 
@@ -138,11 +121,8 @@ npx -y bun skills/baoyu-danger-gemini-web/scripts/main.ts --promptfiles system.m
 
 | If your skill... | Use category |
 |------------------|--------------|
-| Generates visual content (images, slides, comics) | `content-skills` |
-| Publishes to platforms (X, WeChat, etc.) | `content-skills` |
-| Provides AI generation backend | `ai-generation-skills` |
-| Converts or processes content | `utility-skills` |
-| Compresses or optimizes files | `utility-skills` |
+| Generates images (infographics, comics, slides) | `image-generation-skills` |
+| Provides AI generation backend | `image-generation-skills` |
 
 **Creating a new category**: If the skill doesn't fit existing categories, add a new plugin object to `marketplace.json` with:
 - `name`: Descriptive kebab-case name (e.g., `analytics-skills`)

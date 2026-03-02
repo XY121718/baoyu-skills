@@ -130,10 +130,24 @@ async function generateWithOpenAIGenerations(
   size: string,
   quality: CliArgs["quality"]
 ): Promise<Uint8Array> {
-  const body: Record<string, any> = { model, prompt, size };
+  const body: Record<string, any> = { model, prompt };
 
-  if (model.includes("dall-e-3")) {
-    body.quality = quality === "2k" ? "hd" : "standard";
+  // 检测是否是 xheai 中转站（通过 BASE_URL 判断）
+  const isXheai = baseURL.includes("xheai.cc");
+
+  if (isXheai) {
+    // xheai 格式：使用 aspect_ratio + image_size
+    // 从 size 参数提取宽高比
+    const aspectRatio = extractAspectRatioFromSize(size);
+    body.aspect_ratio = aspectRatio;
+    body.image_size = quality === "2k" ? "2k" : "1k";
+    body.response_format = "url";
+  } else {
+    // 标准 OpenAI 格式
+    body.size = size;
+    if (model.includes("dall-e-3")) {
+      body.quality = quality === "2k" ? "hd" : "standard";
+    }
   }
 
   const res = await fetch(`${baseURL}/images/generations`, {
@@ -152,6 +166,29 @@ async function generateWithOpenAIGenerations(
 
   const result = (await res.json()) as OpenAIImageResponse;
   return extractImageFromResponse(result);
+}
+
+function extractAspectRatioFromSize(size: string): string {
+  // 从 "1024x1024" 提取宽高比
+  const match = size.match(/^(\d+)x(\d+)$/);
+  if (!match) return "1:1";
+
+  const w = parseInt(match[1]!);
+  const h = parseInt(match[2]!);
+
+  const ratio = w / h;
+
+  // 映射到常见宽高比
+  if (Math.abs(ratio - 1) < 0.1) return "1:1";
+  if (Math.abs(ratio - 16/9) < 0.1) return "16:9";
+  if (Math.abs(ratio - 9/16) < 0.1) return "9:16";
+  if (Math.abs(ratio - 4/3) < 0.1) return "4:3";
+  if (Math.abs(ratio - 3/4) < 0.1) return "3:4";
+  if (Math.abs(ratio - 3/2) < 0.1) return "3:2";
+  if (Math.abs(ratio - 2/3) < 0.1) return "2:3";
+  if (Math.abs(ratio - 21/9) < 0.1) return "21:9";
+
+  return "1:1";
 }
 
 async function generateWithOpenAIEdits(
