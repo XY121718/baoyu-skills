@@ -43,7 +43,9 @@ Use AskUserQuestion with ALL questions in ONE call:
 header: "Provider"
 question: "Default image generation provider?"
 options:
-  - label: "Google (Recommended)"
+  - label: "xheai (Recommended)"
+    description: "中转站 - 兼容 OpenAI 格式，国内访问快"
+  - label: "Google"
     description: "Gemini multimodal - high quality, reference images, flexible sizes"
   - label: "OpenAI"
     description: "GPT Image - consistent quality, reliable output"
@@ -55,7 +57,7 @@ options:
 
 ### Question 2: Default Google Model
 
-Only show if user selected Google or auto-detect (no explicit provider).
+Only show if user selected Google.
 
 ```yaml
 header: "Google Model"
@@ -67,6 +69,20 @@ options:
     description: "Fast generation, good quality, lower cost"
   - label: "gemini-3-flash-preview"
     description: "Fast generation, balanced quality and speed"
+```
+
+### Question 2b: Default xheai Model
+
+Only show if user selected xheai.
+
+```yaml
+header: "xheai Model"
+question: "Default xheai image generation model?"
+options:
+  - label: "gemini-3.1-flash-image-preview (Recommended)"
+    description: "Fast generation, good quality, lower cost"
+  - label: "gemini-3-pro-image-preview"
+    description: "Highest quality, best for production use"
 ```
 
 ### Question 3: Default Quality
@@ -114,6 +130,7 @@ default_model:
   openai: null
   dashscope: null
   replicate: null
+  xheai: [selected xheai model or null]
 ---
 ```
 
@@ -171,6 +188,18 @@ options:
     description: "Google's base image model on Replicate"
 ```
 
+### xheai Model Selection
+
+```yaml
+header: "xheai Model"
+question: "Choose a default xheai image generation model?"
+options:
+  - label: "gemini-3.1-flash-image-preview (Recommended)"
+    description: "Fast generation, good quality, lower cost"
+  - label: "gemini-3-pro-image-preview"
+    description: "Highest quality, best for production use"
+```
+
 ### Update EXTEND.md
 
 After user selects a model:
@@ -185,6 +214,7 @@ default_model:
   openai: [value or null]
   dashscope: [value or null]
   replicate: [value or null]
+  xheai: [value or null]
 ```
 
 Only set the selected provider's model; leave others as their current value or null.
