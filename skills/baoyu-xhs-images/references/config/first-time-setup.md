@@ -81,6 +81,8 @@ options:
     description: "~/.baoyu-skills/ (all projects)"
 ```
 
+⚠️ **注意**：路径是 `.baoyu-skills`（**连字符**），不是 `.baoyu_skills`（下划线）！
+
 ## Save Locations
 
 | Choice | Path | Scope |
