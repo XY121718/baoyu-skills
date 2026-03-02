@@ -5,6 +5,13 @@ description: First-time setup and default model selection flow for baoyu-image-g
 
 # First-Time Setup
 
+## ⚠️ 重要：必须询问用户选择！
+
+- **禁止**：直接使用默认选项而不询问用户
+- **禁止**：跳过设置步骤直接生成
+- **必须**：用 AskUserQuestion 让用户选择每个选项
+- **必须**：等用户确认后再保存 EXTEND.md
+
 ## Overview
 
 Triggered when:
