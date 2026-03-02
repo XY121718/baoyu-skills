@@ -168,9 +168,11 @@ Copy and track progress:
 
 ```
 XHS Infographic Progress:
-- [ ] Step 0: Check preferences (EXTEND.md) ⛔ BLOCKING
-  - [ ] Found → load preferences → continue
-  - [ ] Not found → run first-time setup → MUST complete before Step 1
+═══════════════════════════════════════════════════════
+⛔ Step 0: MUST check EXTEND.md FIRST - DO NOT SKIP!
+═══════════════════════════════════════════════════════
+  - If found → load preferences → continue to Step 1
+  - If NOT found → run first-time setup → MUST complete BEFORE Step 1
 - [ ] Step 1: Analyze content → analysis.md
 - [ ] Step 2: Confirmation 1 - Content understanding ⚠️ REQUIRED
 - [ ] Step 3: Generate 3 outline + style variants
@@ -193,11 +195,15 @@ Input → [Step 0: Preferences] ─┬─ Found → Continue
 Analyze → [Confirm 1] → 3 Outlines → [Confirm 2: Outline + Style + Elements] → Generate → Complete
 ```
 
-### Step 0: Load Preferences (EXTEND.md) ⛔ BLOCKING
+### Step 0: Load Preferences (EXTEND.md) ⛔ MUST DO FIRST
 
 **Purpose**: Load user preferences or run first-time setup.
 
-**CRITICAL**: If EXTEND.md not found, MUST complete first-time setup before ANY other questions or steps. Do NOT proceed to content analysis, do NOT ask about style, do NOT ask about layout — ONLY complete the preferences setup first.
+**⚠️ 重要提醒**：
+- 如果 EXTEND.md **存在** → 加载偏好设置 → 直接跳到 Step 1
+- 如果 EXTEND.md **不存在** → **必须**运行首次设置流程，保存配置后才能继续
+- **禁止**：在 Step 0 完成前询问内容、风格、布局等问题
+- **禁止**：跳过 Step 0 直接进入内容分析
 
 Use Bash to check EXTEND.md existence (priority order):
 
