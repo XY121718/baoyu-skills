@@ -90,6 +90,8 @@ options:
     description: "Fast generation, good quality, lower cost"
   - label: "gemini-3-pro-image-preview"
     description: "Highest quality, best for production use"
+  - label: "nano-banana-2"
+    description: "Google's latest fast image model, balanced quality and speed"
 ```
 
 ### Question 3: Default Quality
@@ -205,6 +207,8 @@ options:
     description: "Fast generation, good quality, lower cost"
   - label: "gemini-3-pro-image-preview"
     description: "Highest quality, best for production use"
+  - label: "nano-banana-2"
+    description: "Google's latest fast image model, balanced quality and speed"
 ```
 
 ### Update EXTEND.md

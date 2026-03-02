@@ -29,7 +29,6 @@ export async function generateImage(
 
   const endpoint = `${baseURL}/v1/images/generations`;
 
-  // 使用 xheai 的自定义格式
   const aspectRatio = args.aspectRatio || "1:1";
   const imageSize = getImageSize(args.quality);
 
@@ -40,6 +39,15 @@ export async function generateImage(
     image_size: imageSize,
     response_format: "url",
   };
+
+  if (process.env.DEBUG_ENV) {
+    console.error(`[DEBUG] Xheai request:`);
+    console.error(`  Endpoint: ${endpoint}`);
+    console.error(`  Model: ${model}`);
+    console.error(`  Aspect ratio: ${aspectRatio}`);
+    console.error(`  Image size: ${imageSize}`);
+    console.error(`  Prompt: ${prompt.slice(0, 100)}...`);
+  }
 
   const headers = {
     "Content-Type": "application/json",
@@ -54,7 +62,7 @@ export async function generateImage(
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Xheai API error: ${err}`);
+    throw new Error(`Xheai API error (${res.status}): ${err}`);
   }
 
   const result = (await res.json()) as XheaiImageResponse;
@@ -62,6 +70,13 @@ export async function generateImage(
 }
 
 async function extractImageFromResponse(result: XheaiImageResponse): Promise<Uint8Array> {
+  if (!result.data || result.data.length === 0) {
+    if (process.env.DEBUG_ENV) {
+      console.error(`[DEBUG] Xheai response:`, JSON.stringify(result, null, 2));
+    }
+    throw new Error("No image data in xheai response");
+  }
+
   const img = result.data[0];
 
   if (img?.b64_json) {

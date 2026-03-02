@@ -14,7 +14,7 @@ Options:
   -p, --prompt <text>       Prompt text
   --promptfiles <files...>  Read prompt from files (concatenated)
   --image <path>            Output image path (required)
-  --provider google|openai|dashscope|replicate  Force provider (auto-detect by default)
+  --provider google|openai|dashscope|replicate|xheai  Force provider (auto-detect by default)
   -m, --model <id>          Model ID
   --ar <ratio>              Aspect ratio (e.g., 16:9, 1:1, 4:3)
   --size <WxH>              Size (e.g., 1024x1024)
@@ -26,16 +26,16 @@ Options:
   -h, --help                Show help
 
 Environment variables:
-  OPENAI_API_KEY            OpenAI API key
+  OPENAI_API_KEY            OpenAI API key (also used for xheai)
   GOOGLE_API_KEY            Google API key
   GEMINI_API_KEY            Gemini API key (alias for GOOGLE_API_KEY)
   DASHSCOPE_API_KEY         DashScope API key (阿里云通义万象)
   REPLICATE_API_TOKEN       Replicate API token
-  OPENAI_IMAGE_MODEL        Default OpenAI model (gpt-image-1.5)
+  OPENAI_IMAGE_MODEL        Default OpenAI/xheai model (gemini-3.1-flash-image-preview, nano-banana-2)
   GOOGLE_IMAGE_MODEL        Default Google model (gemini-3-pro-image-preview)
   DASHSCOPE_IMAGE_MODEL     Default DashScope model (z-image-turbo)
   REPLICATE_IMAGE_MODEL     Default Replicate model (google/nano-banana-pro)
-  OPENAI_BASE_URL           Custom OpenAI endpoint
+  OPENAI_BASE_URL           Custom OpenAI endpoint (set to https://api.xheai.cc for xheai)
   OPENAI_IMAGE_USE_CHAT     Use /chat/completions instead of /images/generations (true|false)
   GOOGLE_BASE_URL           Custom Google endpoint
   DASHSCOPE_BASE_URL        Custom DashScope endpoint
@@ -112,7 +112,7 @@ function parseArgs(argv: string[]): CliArgs {
 
     if (a === "--provider") {
       const v = argv[++i];
-      if (v !== "google" && v !== "openai" && v !== "dashscope" && v !== "replicate") throw new Error(`Invalid provider: ${v}`);
+      if (v !== "google" && v !== "openai" && v !== "dashscope" && v !== "replicate" && v !== "xheai") throw new Error(`Invalid provider: ${v}`);
       out.provider = v;
       continue;
     }
@@ -208,8 +208,17 @@ async function loadEnv(): Promise<void> {
   const home = homedir();
   const cwd = process.cwd();
 
-  const homeEnv = await loadEnvFile(path.join(home, ".baoyu-skills", ".env"));
-  const cwdEnv = await loadEnvFile(path.join(cwd, ".baoyu-skills", ".env"));
+  const homePath = path.join(home, ".baoyu-skills", ".env");
+  const cwdPath = path.join(cwd, ".baoyu-skills", ".env");
+
+  const homeEnv = await loadEnvFile(homePath);
+  const cwdEnv = await loadEnvFile(cwdPath);
+
+  if (process.env.DEBUG_ENV) {
+    console.error(`[DEBUG] Loading .env files:`);
+    console.error(`  Home: ${homePath} (${Object.keys(homeEnv).length} keys)`);
+    console.error(`  CWD:  ${cwdPath} (${Object.keys(cwdEnv).length} keys)`);
+  }
 
   for (const [k, v] of Object.entries(homeEnv)) {
     if (!process.env[k]) process.env[k] = v;
@@ -254,9 +263,9 @@ function parseSimpleYaml(yaml: string): Partial<ExtendConfig> {
       } else if (key === "default_image_size") {
         config.default_image_size = value === "null" ? null : (value as "1K" | "2K" | "4K");
       } else if (key === "default_model") {
-        config.default_model = { google: null, openai: null, dashscope: null, replicate: null };
+        config.default_model = { google: null, openai: null, dashscope: null, replicate: null, xheai: null };
         currentKey = "default_model";
-      } else if (currentKey === "default_model" && (key === "google" || key === "openai" || key === "dashscope" || key === "replicate")) {
+      } else if (currentKey === "default_model" && (key === "google" || key === "openai" || key === "dashscope" || key === "replicate" || key === "xheai")) {
         const cleaned = value.replace(/['"]/g, "");
         config.default_model![key] = cleaned === "null" ? null : cleaned;
       }
@@ -339,8 +348,17 @@ function detectProvider(args: CliArgs): Provider {
   const hasOpenai = !!process.env.OPENAI_API_KEY;
   const hasDashscope = !!process.env.DASHSCOPE_API_KEY;
   const hasReplicate = !!process.env.REPLICATE_API_TOKEN;
-  // 检测 xheai 中转站
   const isXheai = process.env.OPENAI_BASE_URL?.includes("xheai.cc");
+
+  if (process.env.DEBUG_ENV) {
+    console.error(`[DEBUG] Provider detection:`);
+    console.error(`  OPENAI_API_KEY: ${hasOpenai ? "SET" : "NOT SET"}`);
+    console.error(`  OPENAI_BASE_URL: ${process.env.OPENAI_BASE_URL || "NOT SET"}`);
+    console.error(`  GOOGLE_API_KEY: ${hasGoogle ? "SET" : "NOT SET"}`);
+    console.error(`  DASHSCOPE_API_KEY: ${hasDashscope ? "SET" : "NOT SET"}`);
+    console.error(`  REPLICATE_API_TOKEN: ${hasReplicate ? "SET" : "NOT SET"}`);
+    console.error(`  isXheai: ${isXheai}`);
+  }
 
   if (args.referenceImages.length > 0) {
     if (hasGoogle) return "google";
@@ -351,9 +369,19 @@ function detectProvider(args: CliArgs): Provider {
     );
   }
 
-  // 优先检测 xheai 中转站
-  if (isXheai && hasOpenai) return "xheai";
+  if (isXheai && hasOpenai) {
+    if (process.env.DEBUG_ENV) {
+      console.error(`[DEBUG] Selected provider: xheai`);
+    }
+    return "xheai";
+  }
+
   const available = [hasGoogle && "google", hasOpenai && "openai", hasDashscope && "dashscope", hasReplicate && "replicate"].filter(Boolean) as Provider[];
+
+  if (process.env.DEBUG_ENV) {
+    console.error(`[DEBUG] Available providers: ${available.join(", ")}`);
+    console.error(`[DEBUG] Selected provider: ${available[0] || "none"}`);
+  }
 
   if (available.length === 1) return available[0]!;
   if (available.length > 1) return available[0]!;
@@ -408,6 +436,64 @@ async function loadProviderModule(provider: Provider): Promise<ProviderModule> {
   return (await import("./providers/openai")) as ProviderModule;
 }
 
+function extractAspectRatioFromPrompt(prompt: string): { ratio: string | null; cleanPrompt: string } {
+  const patterns = [
+    /(\d+)\s*[比:：]\s*(\d+)/g,
+    /(\d+)\s*x\s*(\d+)/gi,
+    /(\d+)\s*\/\s*(\d+)/g,
+  ];
+
+  for (const pattern of patterns) {
+    const match = prompt.match(pattern);
+    if (match) {
+      const fullMatch = match[0];
+      const nums = fullMatch.match(/\d+/g);
+      if (nums && nums.length === 2) {
+        const ratio = `${nums[0]}:${nums[1]}`;
+        const cleanPrompt = prompt.replace(fullMatch, "").trim();
+        return { ratio, cleanPrompt };
+      }
+    }
+  }
+
+  return { ratio: null, cleanPrompt: prompt };
+}
+
+async function askAspectRatio(): Promise<string> {
+  console.error("\nPlease select aspect ratio:");
+  console.error("1. 1:1 (Square)");
+  console.error("2. 16:9 (Landscape)");
+  console.error("3. 9:16 (Portrait)");
+  console.error("4. 4:3 (Standard)");
+  console.error("5. 3:4 (Portrait)");
+  console.error("6. 2.35:1 (Cinematic)");
+  console.error("Enter choice (1-6): ");
+
+  const stdin = process.stdin;
+  stdin.setRawMode(true);
+  stdin.resume();
+
+  return new Promise((resolve) => {
+    stdin.once("data", (data) => {
+      stdin.setRawMode(false);
+      stdin.pause();
+      const choice = data.toString().trim();
+      console.error("");
+
+      const ratios: Record<string, string> = {
+        "1": "1:1",
+        "2": "16:9",
+        "3": "9:16",
+        "4": "4:3",
+        "5": "3:4",
+        "6": "2.35:1",
+      };
+
+      resolve(ratios[choice] || "1:1");
+    });
+  });
+}
+
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
 
@@ -440,6 +526,18 @@ async function main(): Promise<void> {
     return;
   }
 
+  const { ratio: extractedRatio, cleanPrompt } = extractAspectRatioFromPrompt(prompt);
+  if (extractedRatio && !mergedArgs.aspectRatio) {
+    mergedArgs.aspectRatio = extractedRatio;
+    prompt = cleanPrompt;
+    console.error(`Detected aspect ratio: ${extractedRatio}`);
+  }
+
+  if (!mergedArgs.aspectRatio) {
+    mergedArgs.aspectRatio = await askAspectRatio();
+    console.error(`Selected aspect ratio: ${mergedArgs.aspectRatio}`);
+  }
+
   if (mergedArgs.referenceImages.length > 0) {
     await validateReferenceImages(mergedArgs.referenceImages);
   }
@@ -453,6 +551,7 @@ async function main(): Promise<void> {
     if (provider === "openai") model = extendConfig.default_model.openai ?? null;
     if (provider === "dashscope") model = extendConfig.default_model.dashscope ?? null;
     if (provider === "replicate") model = extendConfig.default_model.replicate ?? null;
+    if (provider === "xheai") model = extendConfig.default_model.xheai ?? null;
   }
   model = model || providerModule.getDefaultModel();
 

@@ -28,5 +28,6 @@ export type ExtendConfig = {
     openai: string | null;
     dashscope: string | null;
     replicate: string | null;
+    xheai: string | null;
   };
 };

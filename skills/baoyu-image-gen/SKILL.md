@@ -5,7 +5,7 @@ description: AI image generation with OpenAI, Google, DashScope and Replicate AP
 
 # Image Generation (AI SDK)
 
-Official API-based image generation. Supports OpenAI, Google, DashScope (阿里通义万象) and Replicate providers.
+Official API-based image generation. Supports OpenAI, Google, DashScope (阿里通义万象), Replicate, and xheai (中转站) providers.
 
 ## Script Directory
 
@@ -76,6 +76,12 @@ npx -y bun ${SKILL_DIR}/scripts/main.ts --prompt "A cat" --image out.png --provi
 
 # Replicate with specific model
 npx -y bun ${SKILL_DIR}/scripts/main.ts --prompt "A cat" --image out.png --provider replicate --model google/nano-banana
+
+# xheai (中转站 - 兼容 OpenAI 格式)
+npx -y bun ${SKILL_DIR}/scripts/main.ts --prompt "A cat" --image out.png --provider xheai
+
+# xheai with nano-banana-2
+npx -y bun ${SKILL_DIR}/scripts/main.ts --prompt "A cat" --image out.png --provider xheai --model nano-banana-2
 ```
 
 ## Options
@@ -85,8 +91,8 @@ npx -y bun ${SKILL_DIR}/scripts/main.ts --prompt "A cat" --image out.png --provi
 | `--prompt <text>`, `-p` | Prompt text |
 | `--promptfiles <files...>` | Read prompt from files (concatenated) |
 | `--image <path>` | Output image path (required) |
-| `--provider google\|openai\|dashscope\|replicate` | Force provider (default: google) |
-| `--model <id>`, `-m` | Model ID (Google: `gemini-3-pro-image-preview`, `gemini-3.1-flash-image-preview`; OpenAI: `gpt-image-1.5`) |
+| `--provider google\|openai\|dashscope\|replicate\|xheai` | Force provider (default: auto-detect) |
+| `--model <id>`, `-m` | Model ID (Google: `gemini-3-pro-image-preview`, `gemini-3.1-flash-image-preview`; OpenAI: `gpt-image-1.5`; xheai: `gemini-3.1-flash-image-preview`, `nano-banana-2`) |
 | `--ar <ratio>` | Aspect ratio (e.g., `16:9`, `1:1`, `4:3`) |
 | `--size <WxH>` | Size (e.g., `1024x1024`) |
 | `--quality normal\|2k` | Quality preset (default: 2k) |
@@ -99,20 +105,31 @@ npx -y bun ${SKILL_DIR}/scripts/main.ts --prompt "A cat" --image out.png --provi
 
 | Variable | Description |
 |----------|-------------|
-| `OPENAI_API_KEY` | OpenAI API key |
+| `OPENAI_API_KEY` | OpenAI API key (also used for xheai when OPENAI_BASE_URL points to xheai.cc) |
 | `GOOGLE_API_KEY` | Google API key |
 | `DASHSCOPE_API_KEY` | DashScope API key (阿里云) |
 | `REPLICATE_API_TOKEN` | Replicate API token |
-| `OPENAI_IMAGE_MODEL` | OpenAI model override |
+| `OPENAI_IMAGE_MODEL` | OpenAI/xheai model override |
 | `GOOGLE_IMAGE_MODEL` | Google model override |
 | `DASHSCOPE_IMAGE_MODEL` | DashScope model override (default: z-image-turbo) |
 | `REPLICATE_IMAGE_MODEL` | Replicate model override (default: google/nano-banana-pro) |
-| `OPENAI_BASE_URL` | Custom OpenAI endpoint |
+| `OPENAI_BASE_URL` | Custom OpenAI endpoint (set to https://api.xheai.cc for xheai) |
 | `GOOGLE_BASE_URL` | Custom Google endpoint |
 | `DASHSCOPE_BASE_URL` | Custom DashScope endpoint |
 | `REPLICATE_BASE_URL` | Custom Replicate endpoint |
+| `DEBUG_ENV` | Set to `1` to enable debug output for env loading and provider detection |
 
 **Load Priority**: CLI args > EXTEND.md > env vars > `<cwd>/.baoyu-skills/.env` > `~/.baoyu-skills/.env`
+
+**Cross-Platform Paths**: `~/.baoyu-skills/.env` automatically resolves to:
+- Windows: `C:\Users\<username>\.baoyu-skills\.env`
+- macOS: `/Users/<username>/.baoyu-skills/.env`
+- Linux: `/home/<username>/.baoyu-skills/.env`
+
+**Debug Mode**: Set `DEBUG_ENV=1` to see which .env files are loaded and which API keys are detected:
+```bash
+DEBUG_ENV=1 npx -y bun ${SKILL_DIR}/scripts/main.ts --prompt "A cat" --image cat.png
+```
 
 ## Model Resolution
 
